@@ -1,4 +1,4 @@
-function [time,flux,v]=Kin_Model(S,K,y0)
+function [time,metabC,v]=Kin_Model(S,K,y0)
 % S Stands for Stoiciometric Table
 % K Stands for "Rate Constants" out from Ensemble kinetic Model
 % e_flux Stands for electric current applied to a microbe cell
@@ -8,17 +8,23 @@ function [time,flux,v]=Kin_Model(S,K,y0)
 tic
 t=linspace(0,1000,10000);
 y0=0.8*y0./y0;
-[time flux]=flux_Calc(t,S,K,y0);
+[time metabC]=flux_Calc(t,S,K,y0);
 toc
-for i=1:length(y0)
-    v(:,i)=diff(flux(:,i))./diff(t);
+DM=diff(metabC);
+dt=diff(time);
+u=DM./dt;
+ti=time(1:end-1);
+subplot(2,1,1)
+plot(time,metabC(:,:))
+subplot(2,1,2)
+plot(ti,u(:,:))
 end
-end
-function [time,flux]=flux_Calc(t,S,K,y0)
+function [time,metabC]=flux_Calc(t,S,K,y0)
 params.S=S;params.K=K;y0=y0;
 options = odeset('RelTol',1e-8);
-[time,flux]=ode15s(@system_ODE,t,y0,options,params);
-plot(time,flux(:,:))
+[time,metabC]=ode15s(@system_ODE,t,y0,options,params);
+
+
 end
 function [dy]=system_ODE(t,y,params)
 S=params.S;K=params.K;
