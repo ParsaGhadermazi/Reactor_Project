@@ -7,7 +7,7 @@ function [time,metabC,v]=Kin_Model(S,K,y0)
 %y0 is initial metabolites' values
 tic
 t=linspace(0,1000,10000);
-y0=0.8*y0./y0;
+y0=y0+rand(length(y0),1)/3;
 [time metabC]=flux_Calc(t,S,K,y0);
 toc
 DM=diff(metabC);
