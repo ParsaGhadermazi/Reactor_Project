@@ -1,4 +1,4 @@
-function []=Kin_Model(S,K,y0)
+function [time,flux,v]=Kin_Model(S,K,y0)
 % S Stands for Stoiciometric Table
 % K Stands for "Rate Constants" out from Ensemble kinetic Model
 % e_flux Stands for electric current applied to a microbe cell
@@ -6,23 +6,29 @@ function []=Kin_Model(S,K,y0)
 % article)
 %y0 is initial metabolites' values
 tic
-t=linspace(0,1,10)
-flux=flux_Calc(t,S,K,y0)
+t=linspace(0,1000,10000);
+y0=0.8*y0./y0;
+[time flux]=flux_Calc(t,S,K,y0);
 toc
+for i=1:length(y0)
+    v(:,i)=diff(flux(:,i))./diff(t);
 end
-function [flux]=flux_Calc(t,S,K,y0)
+end
+function [time,flux]=flux_Calc(t,S,K,y0)
 params.S=S;params.K=K;y0=y0;
-[t,flux]=ode45(@system_ODE,t,y0,[],params);
+options = odeset('RelTol',1e-8);
+[time,flux]=ode15s(@system_ODE,t,y0,options,params);
+plot(time,flux(:,:))
 end
 function [dy]=system_ODE(t,y,params)
-S=params.S;K=params.K
-[m,n]=size(S)
+S=params.S;K=params.K;
+[m,n]=size(S);
 % Therefore we have m metabolites and n reactions
 v=K;
 for i=1:n
     for j=1:m
         if S(j,i)<0
-            v(i)=v(i)*y(j)^S(j,i)
+            v(i)=v(i)*y(j)^abs(S(j,i));
         end 
     end
 end
