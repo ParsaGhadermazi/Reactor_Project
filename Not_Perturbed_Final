@@ -7,6 +7,9 @@ function [time,metabC,u]=Kin_Model(S,K,y0)
 %y0 is initial metabolites' values
 tic
 t=linspace(0,1000,10000);
+y0=y0./y0;
+A=[];
+writematrix(A,'Result.xls')
 [time metabC]=flux_Calc(t,S,K,y0);
 toc
 DM=diff(metabC);
@@ -40,9 +43,11 @@ for i=1:n
         end 
     end
 end
-Eth=v(576)
-Act=v(608)
-y=v(576)/v(608)
+Eth=v(576);
+Act=v(608);
+y=v(576)/v(608);
+vect=[Eth Act y]
+% xlsappend('Result',vect);
 dydt=S*v;
 dy=dydt;
 end
