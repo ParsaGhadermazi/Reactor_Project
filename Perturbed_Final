@@ -1,0 +1,48 @@
+function [FR]=Kin_Model_perturb(S,S1,K,y0)
+% S Stands for Stoiciometric Table
+% K Stands for "Rate Constants" out from Ensemble kinetic Model
+% e_flux Stands for electric current applied to a microbe cell
+% v_model is the vector of fluxes without any electricity applied (From the
+% article)
+%y0 is initial metabolites' values
+tic
+t=linspace(0,1000,10000);
+A=[];
+writematrix(A,'Result_P.xls');
+[time metabC]=flux_Calc(t,S,S1,K,y0);
+toc
+Res=xlsread('Result_P.xls');
+plot(t,Res(:,1),t,Res(:,2),t,Res(:,3))
+legend('Eth_Exch_Rate','Act_Exch_Rate','Point_Selectivity')
+xlabel('Time(hr)')
+FR=table(Res(end,:));
+DM=diff(metabC);
+dt=diff(time);
+u=DM./dt;
+end
+function [time,metabC]=flux_Calc(t,S,S1,K,y0)
+params.S=S;params.K=K;y0=y0;params.S1=S1;
+options = odeset('RelTol',1e-8);
+[time,metabC]=ode15s(@system_ODE,t,y0,options,params);
+end
+function [dy]=system_ODE(t,y,params)
+S=params.S;K=params.K;S1=params.S1;
+[m,n]=size(S);
+% Therefore we have m metabolites and n reactions
+v=K;
+for i=1:n
+    for j=1:m
+        if S(j,i)<0
+            v(i)=v(i)*y(j)^abs(S(j,i));
+        end 
+    end
+end
+ v=[v;-0.00001]; 
+Eth=v(576);
+Act=v(608);
+y=v(576)/v(608);
+vect=[Eth Act y];
+xlsappend('Result_P',vect);
+dydt=S1*v;
+dy=dydt;
+end
